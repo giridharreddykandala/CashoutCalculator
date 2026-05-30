@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rummy Scorer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Raleway:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ruby:       #ef5350;
+      --ruby-mid:   #c62828;
+      --ruby-dark:  #7f0000;
+      --ruby-glow:  rgba(239,83,80,0.32);
+      --felt-dark:  #18060a;
+      --felt:       #2a0d12;
+      --text:       #fce8e8;
+      --text-muted: #b58080;
+      --green:      #66bb6a;
+      --gold:       #ffd54f;
+      --blue:       #4fc3f7;
+    }
+
+    body {
+      background: var(--felt-dark);
+      background-image: radial-gradient(ellipse 140% 80% at 50% 0%, #3a0f18 0%, #18060a 65%);
+      min-height: 100vh;
+      font-family: 'Raleway', sans-serif;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(239,83,80,0.005) 2px, rgba(239,83,80,0.005) 4px),
+        repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(239,83,80,0.005) 2px, rgba(239,83,80,0.005) 4px);
+      pointer-events: none;
+    }
+
+    /* ─── Nav ─── */
+    .top-nav { position: relative; z-index: 10; padding: 14px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(239,83,80,0.12); }
+    .home-btn { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; color: var(--text-muted); font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; padding: 6px 14px; border-radius: 5px; border: 1px solid rgba(239,83,80,0.22); transition: all 0.2s; }
+    .home-btn:hover { color: var(--ruby); border-color: var(--ruby-mid); background: rgba(239,83,80,0.06); }
+
+    /* ─── Header ─── */
+    .header { position: relative; text-align: center; padding: 32px 24px 20px; background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, transparent 100%); border-bottom: 2px solid var(--ruby-dark); }
+    .header::after { content: ''; position: absolute; bottom: -1px; left: 10%; width: 80%; height: 1px; background: linear-gradient(90deg, transparent, var(--ruby), transparent); }
+    .title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 6vw, 3.6rem); font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; background: linear-gradient(180deg, #ff8a80 0%, var(--ruby) 50%, var(--ruby-mid) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 18px var(--ruby-glow)); }
+    .subtitle { font-size: 0.78rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
+
+    /* ─── Container ─── */
+    .container { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 24px 16px 60px; display: flex; flex-direction: column; gap: 24px; }
+
+    /* ─── Panel ─── */
+    .panel { background: linear-gradient(145deg, rgba(42,13,18,0.97) 0%, rgba(24,6,10,0.97) 100%); border: 1px solid var(--ruby-dark); border-radius: 12px; padding: 24px; box-shadow: 0 0 0 1px rgba(239,83,80,0.07), 0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(239,83,80,0.1); }
+    .panel-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ruby); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .panel-title::before, .panel-title::after { content: ''; flex: 1; height: 1px; }
+    .panel-title::before { background: linear-gradient(90deg, transparent, var(--ruby-dark)); }
+    .panel-title::after  { background: linear-gradient(90deg, var(--ruby-dark), transparent); }
+
+    /* ─── Fields ─── */
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 0.72rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-muted); }
+    .field input { background: rgba(0,0,0,0.5); border: 1px solid var(--ruby-dark); border-radius: 6px; color: var(--text); font-family: 'Raleway', sans-serif; font-size: 0.95rem; font-weight: 600; padding: 10px 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .field input:focus { border-color: var(--ruby); box-shadow: 0 0 0 3px rgba(239,83,80,0.15); }
+
+    /* ─── Buttons ─── */
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 6px; font-family: 'Raleway', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-ruby { background: linear-gradient(135deg, var(--ruby) 0%, var(--ruby-mid) 100%); color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.45); }
+    .btn-ruby:hover { background: linear-gradient(135deg, #ff7676 0%, var(--ruby) 100%); box-shadow: 0 4px 20px rgba(239,83,80,0.4); transform: translateY(-1px); }
+    .btn-outline { background: transparent; color: var(--text-muted); border: 1px solid rgba(239,83,80,0.28); padding: 8px 16px; font-size: 0.78rem; }
+    .btn-outline:hover { color: var(--ruby); border-color: var(--ruby-mid); background: rgba(239,83,80,0.05); }
+    .btn-big { padding: 14px 40px; font-size: 0.95rem; letter-spacing: 0.2em; border-radius: 8px; }
+    .btn-sm  { padding: 6px 14px; font-size: 0.75rem; letter-spacing: 0.1em; }
+
+    /* ─── Player colours (8 slots) ─── */
+    /* Referenced by JS as PLAYER_COLORS array */
+
+    /* ─── Setup: player cards ─── */
+    .config-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
+    .config-row .field input { width: 140px; }
+
+    .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 18px; }
+
+    .player-setup-card { position: relative; background: rgba(0,0,0,0.28); border-radius: 9px; padding: 14px 14px 14px 16px; border: 1px solid rgba(239,83,80,0.12); transition: border-color 0.2s; }
+    .player-setup-card::before { content: ''; position: absolute; top: 8px; bottom: 8px; left: 0; width: 3px; border-radius: 0 2px 2px 0; background: var(--pc); box-shadow: 0 0 6px var(--pg); }
+
+    .psc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .psc-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pc); box-shadow: 0 0 5px var(--pg); flex-shrink: 0; }
+    .psc-remove { margin-left: auto; background: transparent; border: none; cursor: pointer; color: rgba(239,83,80,0.4); font-size: 0.9rem; padding: 2px 4px; transition: color 0.15s; }
+    .psc-remove:hover { color: var(--ruby); }
+
+    .psc-name-input { background: transparent; border: none; border-bottom: 1px solid rgba(239,83,80,0.2); border-radius: 0; color: var(--text); font-size: 0.92rem; font-weight: 700; padding: 4px 0; width: 100%; outline: none; font-family: 'Raleway', sans-serif; }
+    .psc-name-input:focus { border-color: var(--pc); }
+
+    .setup-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .setup-hint { font-size: 0.74rem; color: var(--text-muted); margin-left: auto; }
+
+    /* ─── Scoreboard ─── */
+    .scoreboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; padding: 4px 0 16px; }
+
+    .score-card { background: rgba(0,0,0,0.3); border: 1px solid rgba(239,83,80,0.1); border-radius: 10px; padding: 14px 12px; text-align: center; position: relative; overflow: hidden; transition: border-color 0.3s; }
+    .score-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--pc), transparent); }
+    .score-card.leading { border-color: var(--pc); box-shadow: 0 0 16px -4px var(--pg); }
+
+    .sc-rank  { position: absolute; top: 8px; right: 10px; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; color: var(--pc); opacity: 0.7; }
+    .sc-name  { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
+    .sc-score { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 900; line-height: 1; color: var(--pc); }
+    .sc-score.leading { filter: drop-shadow(0 0 10px var(--pg)); }
+
+    .sc-progress { height: 4px; background: rgba(0,0,0,0.4); border-radius: 2px; margin: 8px 0 6px; overflow: hidden; }
+    .sc-progress-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+
+    .sc-status { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 2px 7px; border-radius: 10px; display: inline-block; }
+    .sc-status.safe   { background: rgba(102,187,106,0.12); color: var(--green);  border: 1px solid rgba(102,187,106,0.3); }
+    .sc-status.warn   { background: rgba(255,213,79,0.1);   color: var(--gold);   border: 1px solid rgba(255,213,79,0.3); }
+    .sc-status.danger { background: rgba(239,83,80,0.12);   color: var(--ruby);   border: 1px solid rgba(239,83,80,0.35); }
+    .sc-bust-hint { font-size: 0.65rem; color: var(--text-muted); margin-top: 4px; }
+
+    .sb-footer { text-align: center; font-size: 0.75rem; color: var(--text-muted); }
+
+    /* ─── Went-out picker ─── */
+    .went-out-strip { background: rgba(0,0,0,0.28); border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; border: 1px solid rgba(239,83,80,0.1); }
+    .wos-label { font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+    .wos-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .wop-pill { background: rgba(0,0,0,0.3); border: 1px solid rgba(180,100,100,0.2); border-radius: 20px; padding: 6px 16px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: all 0.18s; font-family: 'Raleway', sans-serif; }
+    .wop-pill:hover { border-color: rgba(239,83,80,0.5); color: var(--text); }
+    .wop-pill.active { color: #fff; box-shadow: 0 0 10px var(--pa-glow); }
+
+    /* ─── Round entry rows ─── */
+    .re-rows { display: flex; flex-direction: column; gap: 10px; }
+
+    .re-row { display: grid; grid-template-columns: 150px 90px 1fr; gap: 10px; align-items: center; padding: 11px 14px; border-radius: 8px; border: 1px solid rgba(239,83,80,0.08); background: rgba(0,0,0,0.18); transition: border-color 0.2s, box-shadow 0.2s; }
+    .re-row.winner-row { border-color: var(--pc, var(--ruby)); box-shadow: 0 0 12px -4px var(--pg, var(--ruby-glow)); background: rgba(239,83,80,0.04); }
+
+    .re-name { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.85rem; overflow: hidden; }
+    .re-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .re-crown { font-size: 0.9rem; }
+
+    .re-score-input { background: rgba(0,0,0,0.5); border: 1px solid rgba(239,83,80,0.28); border-radius: 6px; color: var(--text); font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700; padding: 7px 6px; text-align: center; outline: none; width: 100%; transition: border-color 0.2s; }
+    .re-score-input:focus { border-color: var(--ruby); box-shadow: 0 0 0 2px rgba(239,83,80,0.15); }
+
+    .re-winner-score { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; text-align: center; line-height: 1; }
+
+    .re-btns { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+
+    .re-quick { background: rgba(0,0,0,0.35); border: 1px solid rgba(239,83,80,0.18); border-radius: 4px; color: var(--text-muted); font-size: 0.72rem; font-weight: 700; padding: 4px 8px; cursor: pointer; transition: all 0.15s; font-family: 'Raleway', sans-serif; }
+    .re-quick:hover { background: rgba(239,83,80,0.1); border-color: var(--ruby); color: var(--text); }
+
+    .re-clear { background: transparent; border: 1px solid rgba(239,83,80,0.15); border-radius: 4px; color: rgba(239,83,80,0.4); font-size: 0.78rem; font-weight: 700; padding: 4px 8px; cursor: pointer; transition: all 0.15s; font-family: 'Raleway', sans-serif; }
+    .re-clear:hover { color: var(--ruby); border-color: var(--ruby); }
+
+    .re-special { background: rgba(0,0,0,0.35); border: 1px solid rgba(239,83,80,0.2); border-radius: 4px; color: var(--text-muted); font-size: 0.73rem; font-weight: 700; padding: 5px 10px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.05em; font-family: 'Raleway', sans-serif; }
+    .re-special.sp-active       { background: rgba(239,83,80,0.13); border-color: var(--ruby); color: var(--ruby); }
+    .re-special.gin-btn.sp-active { background: rgba(102,187,106,0.12); border-color: var(--green); color: var(--green); }
+    .re-special.rum-btn.sp-active { background: rgba(255,213,79,0.1);   border-color: var(--gold);  color: var(--gold); }
+
+    .add-round-row { display: flex; justify-content: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+
+    /* ─── History table ─── */
+    .history-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid rgba(239,83,80,0.1); }
+    .history-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .history-table thead th { background: rgba(0,0,0,0.5); padding: 9px 12px; text-align: center; font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; border-bottom: 1px solid rgba(239,83,80,0.15); white-space: nowrap; color: var(--text-muted); }
+    .history-table thead th.winner-col { color: var(--ruby); }
+    .history-table tbody tr { border-bottom: 1px solid rgba(239,83,80,0.06); transition: background 0.15s; }
+    .history-table tbody tr:last-child { border-bottom: none; }
+    .history-table tbody tr:hover { background: rgba(239,83,80,0.03); }
+    .history-table tbody td { padding: 9px 12px; text-align: center; vertical-align: middle; }
+    .rnd-num { color: var(--text-muted); font-size: 0.75rem; }
+    .delta-pos  { color: var(--ruby);  font-weight: 700; font-size: 0.82rem; display: block; }
+    .delta-neg  { color: var(--green); font-weight: 700; font-size: 0.82rem; display: block; }
+    .delta-zero { color: var(--text-muted); font-size: 0.82rem; display: block; }
+    .running-score { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 0.92rem; display: block; }
+    .winner-label { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: rgba(239,83,80,0.1); border: 1px solid rgba(239,83,80,0.3); color: var(--ruby); white-space: nowrap; }
+    .special-tag  { font-size: 0.65rem; display: block; color: var(--text-muted); margin-top: 2px; }
+    .special-tag.gin  { color: var(--green); }
+    .special-tag.rummy { color: var(--gold); }
+    .history-empty { text-align: center; padding: 28px; color: var(--text-muted); font-size: 0.85rem; }
+    .undo-btn { background: transparent; border: 1px solid rgba(239,83,80,0.25); color: #ef9a9a; padding: 4px 9px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; font-family: 'Raleway', sans-serif; font-weight: 600; transition: all 0.15s; }
+    .undo-btn:hover { background: rgba(239,83,80,0.1); border-color: var(--ruby); }
+
+    /* ─── Game-over banner ─── */
+    .game-over-banner { background: linear-gradient(135deg, rgba(102,187,106,0.1) 0%, rgba(0,0,0,0.35) 100%); border: 1px solid rgba(102,187,106,0.3); border-radius: 10px; padding: 16px 24px; text-align: center; margin-bottom: 8px; display: none; }
+    .game-over-banner.show { display: block; }
+    .game-over-banner h3 { font-family: 'Playfair Display', serif; color: var(--green); font-size: 1.2rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px; }
+    .game-over-banner p  { font-size: 0.82rem; color: var(--text-muted); }
+
+    /* ─── Cashout ─── */
+    .cashout-ranking { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-bottom: 24px; }
+    .ctc { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 14px 20px; text-align: center; border: 1px solid rgba(239,83,80,0.12); min-width: 110px; }
+    .ctc.winner { border-color: rgba(102,187,106,0.4); background: rgba(102,187,106,0.06); }
+    .ctc-rank  { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+    .ctc-name  { font-size: 0.82rem; font-weight: 700; margin-bottom: 4px; }
+    .ctc-score { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; }
+    .payment-box { background: rgba(0,0,0,0.35); border: 1px solid rgba(239,83,80,0.15); border-radius: 10px; padding: 20px; max-width: 560px; margin: 0 auto 20px; }
+    .payment-title { text-align: center; font-size: 0.72rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+    .payment-row { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.22); border: 1px solid rgba(239,83,80,0.1); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; flex-wrap: wrap; }
+    .payment-row:last-child { margin-bottom: 0; }
+    .pay-from   { font-weight: 700; color: var(--ruby); font-size: 0.88rem; }
+    .pay-to     { font-weight: 700; color: var(--green); font-size: 0.88rem; }
+    .pay-arrow  { color: var(--ruby); opacity: 0.5; flex-shrink: 0; }
+    .pay-amount { margin-left: auto; font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: var(--ruby); }
+    .pay-sublabel { font-size: 0.66rem; color: var(--text-muted); display: block; }
+
+    /* ─── Toast ─── */
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: rgba(42,13,18,0.97); border: 1px solid var(--ruby-dark); border-radius: 8px; padding: 12px 24px; font-size: 0.85rem; opacity: 0; transition: all 0.3s ease; z-index: 999; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.55); }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--ruby-dark), transparent); margin: 20px 0; }
+
+    @media (max-width: 600px) {
+      .re-row { grid-template-columns: 120px 72px 1fr; }
+    }
+    @media (max-width: 480px) {
+      .re-row { grid-template-columns: 1fr; }
+      .re-score-input { width: 90px; justify-self: start; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a class="home-btn" href="index.html">← Game Room</a>
+</nav>
+
+<header class="header">
+  <h1 class="title">♥ Rummy Scorer</h1>
+  <p class="subtitle">Players · Rounds · Score Tracking · Settlements</p>
+</header>
+
+<div class="container">
+
+  <!-- ═══════════════ SETUP ═══════════════ -->
+  <div id="setupSection">
+
+    <!-- Config -->
+    <div class="panel">
+      <div class="panel-title">Game Configuration</div>
+      <div class="config-row">
+        <div class="field">
+          <label>$ Per Point</label>
+          <input type="number" id="cfgDPP" value="0.10" min="0.001" step="0.01" style="width:130px;">
+        </div>
+        <div class="field">
+          <label>Bust Score</label>
+          <input type="number" id="cfgBust" value="100" min="50" step="10" style="width:120px;" title="Game ends when any player hits this score">
+        </div>
+        <div class="field">
+          <label>Gin Bonus (pts)</label>
+          <input type="number" id="cfgGin" value="-25" max="0" step="5" style="width:120px;" title="Subtract from score when going Gin">
+        </div>
+        <div class="field">
+          <label>Rummy Bonus (pts)</label>
+          <input type="number" id="cfgRummy" value="-50" max="0" step="5" style="width:120px;" title="Subtract from score when going Rummy">
+        </div>
+      </div>
+      <div style="margin-top:14px; font-size:0.75rem; color:var(--text-muted); line-height:1.8;">
+        ♥ <strong style="color:var(--ruby)">Lower score wins.</strong> Penalty points accumulate each round. First player to reach the bust score ends the game &mdash; lowest score takes the cashout.
+        <br>Gin &amp; Rummy bonuses are <em>subtracted</em> from a player&apos;s running total when they go out clean.
+      </div>
+    </div>
+
+    <!-- Players -->
+    <div class="panel">
+      <div class="panel-title">Players</div>
+      <div class="players-grid" id="playersGrid"></div>
+      <div class="setup-actions">
+        <button class="btn btn-outline btn-sm" onclick="addPlayerCard()" id="addPlayerBtn">+ Add Player</button>
+        <span class="setup-hint" id="playerCountHint">2 players</span>
+        <button class="btn btn-ruby btn-big" style="margin-left:auto;" onclick="startGame()">♥ Start Game ♥</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════ GAME ═══════════════ -->
+  <div id="gameSection" style="display:none;">
+
+    <!-- Scoreboard -->
+    <div class="panel">
+      <div id="gameOverBanner" class="game-over-banner">
+        <h3 id="gameOverTitle">Game Over</h3>
+        <p id="gameOverSubtitle"></p>
+      </div>
+      <div class="scoreboard-grid" id="scoreboard"></div>
+      <div class="sb-footer" style="margin-top:4px;">
+        Bust at <span id="sbBust" style="color:var(--ruby);font-weight:700;">100</span> pts &nbsp;·&nbsp;
+        $<span id="sbDPP">0.10</span>/pt &nbsp;·&nbsp;
+        <span id="sbRounds">0 rounds</span>
+      </div>
+    </div>
+
+    <!-- Round Entry -->
+    <div class="panel" id="roundEntryPanel">
+      <div class="panel-title" id="roundTitle">Add Round</div>
+
+      <!-- Who went out -->
+      <div class="went-out-strip">
+        <div class="wos-label">♥ Who went out this round?</div>
+        <div class="wos-pills" id="wentOutPills"></div>
+      </div>
+
+      <!-- Per-player score entry -->
+      <div class="re-rows" id="reRows"></div>
+
+      <div class="add-round-row">
+        <button class="btn btn-ruby" onclick="addRound()">+ Add Round</button>
+        <button class="btn btn-outline" onclick="clearRoundEntry()">Clear</button>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="panel">
+      <div class="panel-title">Round History</div>
+      <div class="history-wrap">
+        <table class="history-table" id="historyTable">
+          <thead id="histHead"></thead>
+          <tbody id="histBody">
+            <tr><td colspan="10"><div class="history-empty">No rounds yet — add your first round above.</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+      <button class="btn btn-ruby btn-big" onclick="showCashout()">♥ Calculate Cashout ♥</button>
+      <button class="btn btn-outline" onclick="resetGame()">New Game</button>
+    </div>
+
+    <!-- Cashout panel -->
+    <div class="panel" id="cashoutPanel" style="display:none;">
+      <div class="panel-title">Cashout Results</div>
+      <div id="cashoutContent" style="text-align:center;"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════
+const PLAYER_COLORS = [
+  { color: '#ffd54f', glow: 'rgba(255,213,79,0.35)'   },  // gold
+  { color: '#4fc3f7', glow: 'rgba(79,195,247,0.35)'   },  // blue
+  { color: '#66bb6a', glow: 'rgba(102,187,106,0.35)'  },  // green
+  { color: '#f48fb1', glow: 'rgba(244,143,177,0.35)'  },  // pink
+  { color: '#ffb74d', glow: 'rgba(255,183,77,0.35)'   },  // orange
+  { color: '#ce93d8', glow: 'rgba(206,147,216,0.35)'  },  // purple
+  { color: '#80cbc4', glow: 'rgba(128,203,196,0.35)'  },  // teal
+  { color: '#ef9a9a', glow: 'rgba(239,154,154,0.35)'  },  // light red
+];
+
+const ORDINALS = ['1st','2nd','3rd','4th','5th','6th','7th','8th'];
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let G = {
+  config: { dpp: 0.10, bust: 100, ginBonus: -25, rummyBonus: -50 },
+  players: [],   // { id, name, score, colorIdx }
+  rounds:  [],   // { num, winnerId, winnerSpecial, scores: [{pid,delta,special,running}] }
+  gameOver: false,
+  nextId: 0
+};
+
+// Temporary round entry state
+let TR = { winnerId: null, winnerSpecial: 'out', scores: {} };
+
+// ═══════════════════════════════════════════
+//  SETUP
+// ═══════════════════════════════════════════
+(function init() {
+  addPlayerCard('Alice');
+  addPlayerCard('Bob');
+  addPlayerCard('Charlie');
+})();
+
+function addPlayerCard(name) {
+  const max = PLAYER_COLORS.length;
+  if (G.players.length >= max) { showToast(`Max ${max} players.`); return; }
+
+  const id   = G.nextId++;
+  const cidx = G.players.length % max;
+  const col  = PLAYER_COLORS[cidx];
+
+  G.players.push({ id, colorIdx: cidx, score: 0, name: name || `Player ${G.players.length + 1}` });
+
+  const card = document.createElement('div');
+  card.className = 'player-setup-card';
+  card.dataset.id = id;
+  card.style.cssText = `--pc:${col.color};--pg:${col.glow};`;
+  card.innerHTML = `
+    <div class="psc-header">
+      <div class="psc-dot"></div>
+      <button class="psc-remove" onclick="removePlayerCard(${id})" title="Remove">✕</button>
+    </div>
+    <input class="psc-name-input" type="text" value="${escHtml(name || `Player ${G.players.length}`)}" maxlength="18" placeholder="Player name" style="border-color:rgba(${hexToRgb(col.color)},0.2)">`;
+  document.getElementById('playersGrid').appendChild(card);
+  updatePlayerHint();
+}
+
+function removePlayerCard(id) {
+  if (G.players.length <= 2) { showToast('At least 2 players required.'); return; }
+  G.players = G.players.filter(p => p.id !== id);
+  document.querySelector(`.player-setup-card[data-id="${id}"]`)?.remove();
+  updatePlayerHint();
+}
+
+function updatePlayerHint() {
+  const n = G.players.length;
+  document.getElementById('playerCountHint').textContent = `${n} player${n > 1 ? 's' : ''}`;
+  document.getElementById('addPlayerBtn').disabled = n >= PLAYER_COLORS.length;
+}
+
+function readSetupPlayers() {
+  return Array.from(document.querySelectorAll('.player-setup-card')).map((card, i) => ({
+    id: parseInt(card.dataset.id),
+    name: card.querySelector('input').value.trim() || `Player ${i + 1}`,
+    colorIdx: i % PLAYER_COLORS.length
+  }));
+}
+
+function startGame() {
+  const setup = readSetupPlayers();
+  if (setup.length < 2) { showToast('Add at least 2 players.'); return; }
+
+  G.config.dpp       = parseFloat(document.getElementById('cfgDPP').value)   || 0.10;
+  G.config.bust      = parseInt(document.getElementById('cfgBust').value)     || 100;
+  G.config.ginBonus  = parseInt(document.getElementById('cfgGin').value)      || -25;
+  G.config.rummyBonus= parseInt(document.getElementById('cfgRummy').value)    || -50;
+
+  G.players = setup.map(p => ({ ...p, score: 0 }));
+  G.rounds  = [];
+  G.gameOver = false;
+  TR = { winnerId: null, winnerSpecial: 'out', scores: {} };
+
+  document.getElementById('setupSection').style.display = 'none';
+  document.getElementById('gameSection').style.display  = 'block';
+  document.getElementById('sbBust').textContent = G.config.bust;
+  document.getElementById('sbDPP').textContent  = G.config.dpp.toFixed(2);
+
+  buildHistoryHeader();
+  updateScoreboard();
+  renderRoundEntry();
+  showToast(`Game on! ${G.players.length} players, bust at ${G.config.bust} pts.`);
+}
+
+// ═══════════════════════════════════════════
+//  SCOREBOARD
+// ═══════════════════════════════════════════
+function updateScoreboard() {
+  const ranked = [...G.players].sort((a, b) => a.score - b.score);
+  const bust   = G.config.bust;
+  document.getElementById('sbRounds').textContent = `${G.rounds.length} round${G.rounds.length !== 1 ? 's' : ''}`;
+
+  document.getElementById('scoreboard').innerHTML = G.players.map(p => {
+    const rank  = ranked.indexOf(p) + 1;
+    const col   = PLAYER_COLORS[p.colorIdx];
+    const pct   = Math.min(100, Math.max(0, (p.score / bust) * 100));
+    const barC  = pct < 50 ? '#66bb6a' : pct < 78 ? '#ffd54f' : '#ef5350';
+    const stCls = pct < 50 ? 'safe' : pct < 78 ? 'warn' : 'danger';
+    const stTxt = pct < 50 ? 'Safe' : pct < 78 ? 'Caution' : 'Danger!';
+    const lead  = rank === 1;
+    const rem   = bust - p.score;
+    return `<div class="score-card ${lead ? 'leading' : ''}" style="--pc:${col.color};--pg:${col.glow};">
+      <div class="sc-rank">${ORDINALS[rank - 1] || `#${rank}`}</div>
+      <div class="sc-name">${escHtml(p.name)}</div>
+      <div class="sc-score ${lead ? 'leading' : ''}">${p.score}</div>
+      <div class="sc-progress"><div class="sc-progress-fill" style="width:${pct}%;background:${barC};"></div></div>
+      <div class="sc-status ${stCls}">${stTxt}</div>
+      <div class="sc-bust-hint">${rem > 0 ? `${rem} until bust` : 'Bust!'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  ROUND ENTRY
+// ═══════════════════════════════════════════
+function renderRoundEntry() {
+  renderWentOutPills();
+  renderReRows();
+}
+
+function renderWentOutPills() {
+  const items = [
+    { id: -1, label: 'Nobody', color: '#7b9db5', glow: 'rgba(123,157,181,0.25)' },
+    ...G.players.map(p => ({ id: p.id, label: p.name, color: PLAYER_COLORS[p.colorIdx].color, glow: PLAYER_COLORS[p.colorIdx].glow }))
+  ];
+  document.getElementById('wentOutPills').innerHTML = items.map(item => {
+    const isActive = TR.winnerId === item.id || (TR.winnerId === null && item.id === -1);
+    const activeStyle = isActive
+      ? `background:${item.color}22;border-color:${item.color};color:${item.color};`
+      : '';
+    return `<button class="wop-pill ${isActive ? 'active' : ''}" style="${activeStyle}--pa-glow:${item.glow};" onclick="selectWentOut(${item.id})">${escHtml(item.label)}</button>`;
+  }).join('');
+}
+
+function renderReRows() {
+  const { ginBonus, rummyBonus } = G.config;
+  document.getElementById('reRows').innerHTML = G.players.map(p => {
+    const isWinner = p.id === TR.winnerId;
+    const col = PLAYER_COLORS[p.colorIdx];
+    const curScore = TR.scores[p.id] ?? 0;
+
+    if (isWinner) {
+      const wScore = TR.winnerSpecial === 'gin' ? ginBonus : TR.winnerSpecial === 'rummy' ? rummyBonus : 0;
+      const wColor = wScore < 0 ? 'var(--green)' : wScore > 0 ? 'var(--ruby)' : col.color;
+      return `<div class="re-row winner-row" style="--pc:${col.color};--pg:${col.glow};">
+        <div class="re-name">
+          <div class="re-dot" style="background:${col.color};box-shadow:0 0 5px ${col.glow};"></div>
+          <span style="color:${col.color}">${escHtml(p.name)}</span>
+          <span class="re-crown">🏆</span>
+        </div>
+        <div class="re-winner-score" style="color:${wColor}">${wScore > 0 ? '+' : ''}${wScore}</div>
+        <div class="re-btns">
+          <button class="re-special ${TR.winnerSpecial==='out'?'sp-active':''}" onclick="setWinnerSpecial('out')">Out: 0</button>
+          <button class="re-special gin-btn ${TR.winnerSpecial==='gin'?'sp-active':''}" onclick="setWinnerSpecial('gin')">Gin ${ginBonus}</button>
+          <button class="re-special rum-btn ${TR.winnerSpecial==='rummy'?'sp-active':''}" onclick="setWinnerSpecial('rummy')">Rummy ${rummyBonus}</button>
+        </div>
+      </div>`;
+    }
+
+    return `<div class="re-row">
+      <div class="re-name">
+        <div class="re-dot" style="background:${col.color};"></div>
+        <span style="color:${col.color}">${escHtml(p.name)}</span>
+      </div>
+      <input class="re-score-input" id="si_${p.id}" type="number" min="0" max="999" value="${curScore || ''}" placeholder="0" oninput="setTempScore(${p.id},this.value)">
+      <div class="re-btns">
+        ${[5,10,15,20,25,50].map(v => `<button class="re-quick" onclick="addTempScore(${p.id},${v})">+${v}</button>`).join('')}
+        <button class="re-clear" onclick="clearTempScore(${p.id})">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectWentOut(id) {
+  TR.winnerId = id === -1 ? null : id;
+  TR.winnerSpecial = 'out';
+  renderRoundEntry();
+}
+
+function setWinnerSpecial(type) {
+  TR.winnerSpecial = type;
+  renderReRows();
+  renderWentOutPills();
+}
+
+function setTempScore(pid, val) {
+  TR.scores[pid] = Math.max(0, parseInt(val) || 0);
+}
+
+function addTempScore(pid, delta) {
+  TR.scores[pid] = Math.max(0, (TR.scores[pid] || 0) + delta);
+  const inp = document.getElementById(`si_${pid}`);
+  if (inp) inp.value = TR.scores[pid];
+}
+
+function clearTempScore(pid) {
+  TR.scores[pid] = 0;
+  const inp = document.getElementById(`si_${pid}`);
+  if (inp) inp.value = '';
+}
+
+function clearRoundEntry() {
+  TR = { winnerId: null, winnerSpecial: 'out', scores: {} };
+  renderRoundEntry();
+}
+
+// ═══════════════════════════════════════════
+//  ADD ROUND
+// ═══════════════════════════════════════════
+function addRound() {
+  if (G.gameOver) { showToast('Game over. Start a new game to continue.'); return; }
+
+  // Validate: non-winner players need a score entered
+  const nonWinners = G.players.filter(p => p.id !== TR.winnerId);
+  const missing = nonWinners.filter(p => TR.scores[p.id] === undefined || TR.scores[p.id] === '');
+  if (missing.length > 0) {
+    showToast(`Enter scores for: ${missing.map(p => p.name).join(', ')}`);
+    return;
+  }
+
+  const { ginBonus, rummyBonus } = G.config;
+  const winnerDelta = TR.winnerId !== null
+    ? (TR.winnerSpecial === 'gin' ? ginBonus : TR.winnerSpecial === 'rummy' ? rummyBonus : 0)
+    : null;
+
+  const roundScores = G.players.map(p => {
+    const isWinner = p.id === TR.winnerId;
+    const delta = isWinner ? winnerDelta : (TR.scores[p.id] || 0);
+    p.score += delta;
+    return { pid: p.id, delta, special: isWinner ? TR.winnerSpecial : null, running: p.score };
+  });
+
+  const roundNum = G.rounds.length + 1;
+  G.rounds.push({ num: roundNum, winnerId: TR.winnerId, winnerSpecial: TR.winnerSpecial, scores: roundScores });
+
+  TR = { winnerId: null, winnerSpecial: 'out', scores: {} };
+
+  updateScoreboard();
+  refreshHistory();
+  checkGameOver();
+  renderRoundEntry();
+
+  const winner = G.players.find(p => p.id === G.rounds[G.rounds.length - 1].winnerId);
+  showToast(`Round ${roundNum} recorded.${winner ? ` ${winner.name} went out.` : ''}`);
+}
+
+// ═══════════════════════════════════════════
+//  UNDO
+// ═══════════════════════════════════════════
+function undoLastRound() {
+  if (!G.rounds.length) return;
+  const last = G.rounds.pop();
+  last.scores.forEach(s => {
+    const p = G.players.find(p => p.id === s.pid);
+    if (p) p.score -= s.delta;
+  });
+  G.gameOver = false;
+  document.getElementById('gameOverBanner').classList.remove('show');
+  document.getElementById('cashoutPanel').style.display = 'none';
+  document.getElementById('roundEntryPanel').style.display = 'block';
+  updateScoreboard();
+  refreshHistory();
+  renderRoundEntry();
+  showToast(`Round ${G.rounds.length + 1} undone.`);
+}
+
+// ═══════════════════════════════════════════
+//  HISTORY TABLE
+// ═══════════════════════════════════════════
+function buildHistoryHeader() {
+  document.getElementById('histHead').innerHTML = `
+    <tr>
+      <th>Rnd</th>
+      <th class="winner-col">Went Out</th>
+      ${G.players.map(p => `<th style="color:${PLAYER_COLORS[p.colorIdx].color}">${escHtml(p.name)}</th>`).join('')}
+      <th></th>
+    </tr>`;
+}
+
+function refreshHistory() {
+  const tbody = document.getElementById('histBody');
+  if (!G.rounds.length) {
+    tbody.innerHTML = `<tr><td colspan="${G.players.length + 3}"><div class="history-empty">No rounds yet.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = G.rounds.map(r => {
+    const winner = G.players.find(p => p.id === r.winnerId);
+    const winnerCell = winner
+      ? `<span class="winner-label">${escHtml(winner.name)}</span>${r.winnerSpecial !== 'out' ? `<span class="special-tag ${r.winnerSpecial}">${r.winnerSpecial === 'gin' ? '✦ Gin' : '★ Rummy'}</span>` : ''}`
+      : `<span style="color:var(--text-muted);font-size:0.78rem;">—</span>`;
+
+    const playerCells = G.players.map(p => {
+      const s = r.scores.find(s => s.pid === p.id);
+      if (!s) return '<td>—</td>';
+      const col = PLAYER_COLORS[p.colorIdx];
+      const cls = s.delta < 0 ? 'delta-neg' : s.delta > 0 ? 'delta-pos' : 'delta-zero';
+      const sign = s.delta > 0 ? '+' : '';
+      const specialTag = s.special && s.special !== 'out'
+        ? `<span class="special-tag ${s.special}">${s.special === 'gin' ? '✦ Gin' : '★ Rummy'}</span>` : '';
+      return `<td>
+        <span class="${cls}">${sign}${s.delta}</span>${specialTag}
+        <span class="running-score" style="color:${col.color}">${s.running}</span>
+      </td>`;
+    }).join('');
+
+    const isLast = r.num === G.rounds.length;
+    return `<tr>
+      <td class="rnd-num">${r.num}</td>
+      <td>${winnerCell}</td>
+      ${playerCells}
+      <td>${isLast ? '<button class="undo-btn" onclick="undoLastRound()">Undo</button>' : ''}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  GAME OVER CHECK
+// ═══════════════════════════════════════════
+function checkGameOver() {
+  const busted = G.players.filter(p => p.score >= G.config.bust);
+  if (!busted.length) return;
+
+  G.gameOver = true;
+  const winner = [...G.players].sort((a, b) => a.score - b.score)[0];
+  document.getElementById('gameOverBanner').classList.add('show');
+  document.getElementById('gameOverTitle').textContent   = `🏆 ${winner.name} Wins!`;
+  document.getElementById('gameOverSubtitle').textContent = `${busted.map(p=>p.name).join(', ')} hit ${G.config.bust} pts. ${winner.name} wins with ${winner.score} pts.`;
+  document.getElementById('roundEntryPanel').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════
+//  CASHOUT
+// ═══════════════════════════════════════════
+function showCashout() {
+  if (!G.rounds.length) { showToast('Play at least one round first.'); return; }
+
+  const { dpp } = G.config;
+  const ranked = [...G.players].sort((a, b) => a.score - b.score);
+  const winner = ranked[0];
+  const losers  = ranked.slice(1);
+
+  const rankingHtml = ranked.map((p, i) => {
+    const col   = PLAYER_COLORS[p.colorIdx];
+    const isWin = i === 0;
+    const ordinal = ORDINALS[i] || `#${i+1}`;
+    return `<div class="ctc ${isWin ? 'winner' : ''}">
+      <div class="ctc-rank">${ordinal}${isWin ? ' 🏆' : ''}</div>
+      <div class="ctc-name" style="color:${col.color}">${escHtml(p.name)}</div>
+      <div class="ctc-score" style="color:${isWin ? 'var(--green)' : 'var(--ruby)'}">${p.score}</div>
+    </div>`;
+  }).join('');
+
+  let paymentRows = '';
+  let grandTotal = 0;
+  losers.forEach(loser => {
+    const diff    = loser.score - winner.score;
+    const payment = Math.round(Math.max(0, diff) * dpp * 100) / 100;
+    grandTotal   += payment;
+    const col = PLAYER_COLORS[loser.colorIdx];
+    paymentRows += `<div class="payment-row">
+      <div class="pay-from">${escHtml(loser.name)}<span class="pay-sublabel">${loser.score} pts</span></div>
+      <div style="font-size:0.7rem;color:var(--text-muted);">pays</div>
+      <div class="pay-arrow">→</div>
+      <div class="pay-to">${escHtml(winner.name)}<span class="pay-sublabel">${winner.score} pts</span></div>
+      <div class="pay-amount">$${payment.toFixed(2)}</div>
+    </div>`;
+  });
+
+  const el = document.getElementById('cashoutContent');
+  el.innerHTML = `
+    <div style="margin-bottom:20px;">
+      <div style="display:inline-block;font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--green);background:rgba(102,187,106,0.08);border:1px solid rgba(102,187,106,0.3);border-radius:8px;padding:8px 24px;filter:drop-shadow(0 0 12px rgba(102,187,106,0.25));">🏆 ${escHtml(winner.name)} Wins</div>
+    </div>
+    <div class="cashout-ranking">${rankingHtml}</div>
+    <div style="text-align:center;color:var(--text-muted);font-size:0.8rem;margin-bottom:18px;">
+      $<strong style="color:var(--ruby)">${dpp.toFixed(2)}</strong>/pt &nbsp;·&nbsp;
+      Total payouts: <strong style="color:var(--gold)">$${grandTotal.toFixed(2)}</strong>
+    </div>
+    <div class="payment-box">
+      <div class="payment-title">♥ Settlement Instructions ♥</div>
+      ${paymentRows || '<div style="color:var(--green);padding:12px;">✓ No payments needed!</div>'}
+    </div>
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:22px;flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="resetGame()">New Game</button>
+    </div>`;
+
+  document.getElementById('cashoutPanel').style.display = 'block';
+  document.getElementById('cashoutPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ═══════════════════════════════════════════
+//  RESET
+// ═══════════════════════════════════════════
+function resetGame() {
+  if (!confirm('Start a new game? All score data will be cleared.')) return;
+  G.rounds = []; G.gameOver = false;
+  G.players.forEach(p => p.score = 0);
+  TR = { winnerId: null, winnerSpecial: 'out', scores: {} };
+  document.getElementById('setupSection').style.display = 'block';
+  document.getElementById('gameSection').style.display  = 'none';
+  document.getElementById('gameOverBanner').classList.remove('show');
+  document.getElementById('cashoutPanel').style.display = 'none';
+  document.getElementById('roundEntryPanel').style.display = 'block';
+  showToast('New game — adjust settings and press Start.');
+}
+
+// ═══════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>

@@ -96,7 +96,7 @@
       gap: 28px;
       padding: 56px 28px 80px;
       width: 100%;
-      max-width: 900px;
+      max-width: 1100px;
     }
 
     .game-card {
@@ -141,6 +141,12 @@
       --card-glow: rgba(79,195,247,0.2);
     }
 
+    /* Rummy card */
+    .game-card.rummy {
+      --card-accent: #ef5350;
+      --card-glow: rgba(239,83,80,0.2);
+    }
+
     /* Shimmer top bar */
     .game-card::before {
       content: '';
@@ -164,8 +170,9 @@
     }
     .game-card:hover::after { opacity: 0.07; }
 
-    .game-card.poker { --card-bg-icon: '♣'; }
+    .game-card.poker  { --card-bg-icon: '♣'; }
     .game-card.spades { --card-bg-icon: '♠'; }
+    .game-card.rummy  { --card-bg-icon: '♥'; }
 
     .card-icon {
       font-size: 3.8rem;
@@ -177,6 +184,7 @@
 
     .poker .card-icon  { color: var(--gold-light); }
     .spades .card-icon { color: var(--blue); }
+    .rummy .card-icon  { color: #ef5350; }
 
     .card-name {
       font-family: 'Playfair Display', serif;
@@ -187,6 +195,7 @@
     }
     .poker .card-name  { color: var(--gold-light); }
     .spades .card-name { color: var(--blue); }
+    .rummy .card-name  { color: #ff8a80; }
 
     .card-tagline {
       font-size: 0.78rem;
@@ -254,6 +263,16 @@
       box-shadow: 0 0 20px rgba(79,195,247,0.4);
     }
 
+    .rummy .card-cta {
+      background: linear-gradient(135deg, #ef5350 0%, #b71c1c 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .rummy:hover .card-cta {
+      background: linear-gradient(135deg, #ff7676 0%, #ef5350 100%);
+      box-shadow: 0 0 20px rgba(239,83,80,0.4);
+    }
+
     /* ─── Footer ─── */
     .footer {
       position: relative;
@@ -307,6 +326,20 @@
         <li>Bag penalty counter + dollar cashout</li>
       </ul>
       <div class="card-cta">Play Spades ♠</div>
+    </a>
+
+    <!-- Rummy -->
+    <a class="game-card rummy" href="rummy.html">
+      <div class="card-icon">♥</div>
+      <div class="card-name">Rummy</div>
+      <div class="card-tagline">Players · Rounds · Penalty Points</div>
+      <ul class="card-features">
+        <li>2–8 players with individual names</li>
+        <li>Round-by-round score entry &amp; history</li>
+        <li>Gin &amp; Rummy out-bonuses supported</li>
+        <li>Bust-score tracker + dollar cashout</li>
+      </ul>
+      <div class="card-cta">Play Rummy ♥</div>
     </a>
 
   </div>

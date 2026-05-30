@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Poker Cashout Calculator</title>
+  <title>Game Room · Cashout Central</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Raleway:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,21 +14,21 @@
       --gold-dark: #8a6520;
       --felt: #0d3b1e;
       --felt-dark: #071a0d;
-      --felt-light: #144d28;
-      --red: #c0392b;
+      --blue: #4fc3f7;
+      --blue-dark: #0277bd;
       --text: #f0e6c8;
       --text-muted: #a89870;
-      --glow: rgba(201, 168, 76, 0.5);
     }
 
     body {
       background: var(--felt-dark);
-      background-image:
-        radial-gradient(ellipse 120% 80% at 50% 0%, #1a4d25 0%, #071a0d 60%);
+      background-image: radial-gradient(ellipse 140% 90% at 50% 0%, #1a4d25 0%, #071a0d 65%);
       min-height: 100vh;
       font-family: 'Raleway', sans-serif;
       color: var(--text);
-      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     /* Felt texture */
@@ -37,870 +37,281 @@
       position: fixed;
       inset: 0;
       background-image:
-        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.008) 2px, rgba(255,255,255,0.008) 4px),
-        repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(255,255,255,0.008) 2px, rgba(255,255,255,0.008) 4px);
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.007) 2px, rgba(255,255,255,0.007) 4px),
+        repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(255,255,255,0.007) 2px, rgba(255,255,255,0.007) 4px);
       pointer-events: none;
-      z-index: 0;
     }
 
     /* ─── Header ─── */
     .header {
-      position: relative;
+      width: 100%;
       text-align: center;
-      padding: 36px 24px 20px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
-      border-bottom: 2px solid var(--gold-dark);
+      padding: 52px 24px 40px;
+      position: relative;
     }
 
     .header::after {
       content: '';
       position: absolute;
-      bottom: -1px;
-      left: 10%;
-      width: 80%;
+      bottom: 0; left: 15%; right: 15%;
       height: 1px;
-      background: linear-gradient(90deg, transparent, var(--gold-light), transparent);
+      background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
     }
 
-    .suits {
-      font-size: 1.4rem;
-      letter-spacing: 12px;
-      margin-bottom: 8px;
-      opacity: 0.7;
+    .top-suits {
+      font-size: 1.6rem;
+      letter-spacing: 16px;
+      margin-bottom: 14px;
+      opacity: 0.6;
     }
-    .suits .red { color: #e74c3c; }
+    .top-suits .red { color: #e74c3c; }
 
-    .title {
+    .main-title {
       font-family: 'Playfair Display', serif;
-      font-size: clamp(2.2rem, 6vw, 4rem);
+      font-size: clamp(2.6rem, 8vw, 5rem);
       font-weight: 900;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      text-shadow: none;
-      filter: drop-shadow(0 0 16px var(--glow));
+      filter: drop-shadow(0 0 24px rgba(201,168,76,0.5));
     }
 
-    .subtitle {
-      font-size: 0.78rem;
-      letter-spacing: 0.4em;
+    .main-subtitle {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      letter-spacing: 0.45em;
       text-transform: uppercase;
       color: var(--text-muted);
-      margin-top: 4px;
     }
 
-    /* ─── Main layout ─── */
-    .container {
+    /* ─── Game cards grid ─── */
+    .games-grid {
       position: relative;
       z-index: 1;
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 24px 16px 60px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    /* ─── Card panel ─── */
-    .panel {
-      background: linear-gradient(145deg, rgba(20,60,35,0.95) 0%, rgba(7,26,13,0.95) 100%);
-      border: 1px solid var(--gold-dark);
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow:
-        0 0 0 1px rgba(201,168,76,0.1),
-        0 8px 32px rgba(0,0,0,0.5),
-        inset 0 1px 0 rgba(201,168,76,0.15);
-    }
-
-    .panel-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.05rem;
-      font-weight: 700;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .panel-title::before,
-    .panel-title::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--gold-dark));
-    }
-    .panel-title::after {
-      background: linear-gradient(90deg, var(--gold-dark), transparent);
-    }
-
-    /* ─── Buy-in config ─── */
-    .buyin-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      align-items: flex-end;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .field label {
-      font-size: 0.72rem;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
-
-    .field input {
-      background: rgba(0,0,0,0.4);
-      border: 1px solid var(--gold-dark);
-      border-radius: 6px;
-      color: var(--text);
-      font-family: 'Raleway', sans-serif;
-      font-size: 1rem;
-      font-weight: 600;
-      padding: 10px 14px;
-      width: 160px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .field input:focus {
-      border-color: var(--gold);
-      box-shadow: 0 0 0 3px rgba(201,168,76,0.2), 0 0 12px rgba(201,168,76,0.1);
-    }
-
-    .chip-eq {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding-bottom: 10px;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      flex-wrap: wrap;
-    }
-
-    .chip-badge {
-      background: rgba(201,168,76,0.1);
-      border: 1px solid var(--gold-dark);
-      border-radius: 6px;
-      padding: 10px 16px;
-      font-weight: 700;
-      color: var(--gold-light);
-      font-size: 1rem;
-      white-space: nowrap;
-    }
-
-    /* ─── Add player form ─── */
-    .add-player-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: flex-end;
-    }
-
-    .add-player-row .field input {
-      width: 140px;
-    }
-    .add-player-row .field:first-child input {
-      width: 180px;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 22px;
-      border-radius: 6px;
-      font-family: 'Raleway', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      cursor: pointer;
-      border: none;
-      transition: all 0.2s;
-    }
-
-    .btn-gold {
-      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
-      color: #1a0e00;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,168,76,0.3);
-    }
-    .btn-gold:hover {
-      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
-      box-shadow: 0 4px 20px rgba(201,168,76,0.4), 0 0 0 1px var(--gold);
-      transform: translateY(-1px);
-    }
-    .btn-gold:active { transform: translateY(0); }
-
-    .btn-outline {
-      background: transparent;
-      color: var(--text-muted);
-      border: 1px solid rgba(201,168,76,0.3);
-      padding: 6px 14px;
-      font-size: 0.75rem;
-    }
-    .btn-outline:hover {
-      color: var(--text);
-      border-color: var(--gold-dark);
-      background: rgba(201,168,76,0.05);
-    }
-
-    .btn-red {
-      background: transparent;
-      border: 1px solid rgba(192,57,43,0.4);
-      color: #e57373;
-      padding: 6px 12px;
-      font-size: 0.75rem;
-    }
-    .btn-red:hover {
-      background: rgba(192,57,43,0.1);
-      border-color: #c0392b;
-    }
-
-    .btn-big {
-      padding: 14px 40px;
-      font-size: 0.95rem;
-      letter-spacing: 0.2em;
-      border-radius: 8px;
-    }
-
-    /* ─── Players table ─── */
-    .table-wrap {
-      overflow-x: auto;
-      border-radius: 8px;
-      border: 1px solid rgba(201,168,76,0.15);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 520px;
-    }
-
-    thead th {
-      background: rgba(0,0,0,0.4);
-      padding: 12px 16px;
-      text-align: left;
-      font-size: 0.7rem;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--gold);
-      font-weight: 600;
-      border-bottom: 1px solid var(--gold-dark);
-      white-space: nowrap;
-    }
-
-    thead th:last-child { text-align: center; }
-
-    tbody tr {
-      border-bottom: 1px solid rgba(201,168,76,0.08);
-      transition: background 0.15s;
-    }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: rgba(201,168,76,0.04); }
-
-    tbody td {
-      padding: 12px 16px;
-      font-size: 0.92rem;
-      vertical-align: middle;
-    }
-
-    tbody td:last-child { text-align: center; }
-
-    .player-name-cell {
-      font-weight: 700;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--gold-dark), var(--felt-light));
-      border: 1px solid var(--gold-dark);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--gold-light);
-      flex-shrink: 0;
-    }
-
-    .inline-input {
-      background: rgba(0,0,0,0.3);
-      border: 1px solid rgba(201,168,76,0.25);
-      border-radius: 5px;
-      color: var(--text);
-      font-family: 'Raleway', sans-serif;
-      font-size: 0.88rem;
-      font-weight: 600;
-      padding: 6px 10px;
-      width: 90px;
-      text-align: center;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .inline-input:focus {
-      border-color: var(--gold);
-      box-shadow: 0 0 0 2px rgba(201,168,76,0.15);
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      letter-spacing: 0.05em;
-    }
-    .empty-state .big-suit {
-      font-size: 3rem;
-      display: block;
-      margin-bottom: 12px;
-      opacity: 0.3;
-    }
-
-    /* ─── Calculate section ─── */
-    .calc-row {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    /* ─── Results ─── */
-    .results-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 12px;
-      margin-bottom: 28px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 28px;
+      padding: 56px 28px 80px;
+      width: 100%;
+      max-width: 900px;
     }
 
-    .player-card {
-      background: rgba(0,0,0,0.3);
-      border-radius: 8px;
-      padding: 16px;
-      border: 1px solid rgba(201,168,76,0.15);
+    .game-card {
       position: relative;
+      background: linear-gradient(145deg, rgba(20,60,35,0.96) 0%, rgba(7,26,13,0.96) 100%);
+      border-radius: 16px;
+      padding: 40px 32px 36px;
+      border: 1px solid var(--gold-dark);
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
       overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      box-shadow:
+        0 4px 24px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(201,168,76,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
     }
-    .player-card::before {
+
+    .game-card:hover {
+      transform: translateY(-6px) scale(1.01);
+      box-shadow:
+        0 16px 48px rgba(0,0,0,0.6),
+        0 0 0 1px var(--card-accent),
+        0 0 40px var(--card-glow);
+      border-color: var(--card-accent);
+    }
+
+    /* Poker card */
+    .game-card.poker {
+      --card-accent: var(--gold);
+      --card-glow: rgba(201,168,76,0.2);
+    }
+
+    /* Spades card */
+    .game-card.spades {
+      --card-accent: var(--blue);
+      --card-glow: rgba(79,195,247,0.2);
+    }
+
+    /* Shimmer top bar */
+    .game-card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 3px;
+      background: linear-gradient(90deg, transparent, var(--card-accent), transparent);
     }
-    .player-card.winner::before { background: linear-gradient(90deg, #27ae60, #2ecc71); }
-    .player-card.loser::before  { background: linear-gradient(90deg, #c0392b, #e74c3c); }
-    .player-card.even::before   { background: linear-gradient(90deg, var(--gold-dark), var(--gold)); }
 
-    .pc-name {
-      font-size: 0.8rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    /* Background watermark icon */
+    .game-card::after {
+      content: var(--card-bg-icon);
+      position: absolute;
+      bottom: -20px;
+      right: -10px;
+      font-size: 9rem;
+      opacity: 0.04;
+      line-height: 1;
+      pointer-events: none;
+      transition: opacity 0.3s;
     }
-    .pc-balance {
+    .game-card:hover::after { opacity: 0.07; }
+
+    .game-card.poker { --card-bg-icon: '♣'; }
+    .game-card.spades { --card-bg-icon: '♠'; }
+
+    .card-icon {
+      font-size: 3.8rem;
+      line-height: 1;
+      filter: drop-shadow(0 0 12px var(--card-glow));
+      transition: transform 0.3s;
+    }
+    .game-card:hover .card-icon { transform: scale(1.1); }
+
+    .poker .card-icon  { color: var(--gold-light); }
+    .spades .card-icon { color: var(--blue); }
+
+    .card-name {
       font-family: 'Playfair Display', serif;
-      font-size: 1.6rem;
+      font-size: 2rem;
       font-weight: 700;
-    }
-    .pc-balance.positive { color: #2ecc71; }
-    .pc-balance.negative { color: #e74c3c; }
-    .pc-balance.zero     { color: var(--gold); }
-
-    .pc-details {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      margin-top: 6px;
-      line-height: 1.6;
-    }
-
-    /* ─── Settlements ─── */
-    .settlements-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1rem;
-      color: var(--gold);
-      letter-spacing: 0.15em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      margin-bottom: 14px;
-      text-align: center;
+    }
+    .poker .card-name  { color: var(--gold-light); }
+    .spades .card-name { color: var(--blue); }
+
+    .card-tagline {
+      font-size: 0.78rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      line-height: 1.7;
     }
 
-    .settlement-list {
+    .card-features {
+      list-style: none;
+      width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
+      margin-top: 4px;
     }
 
-    .settlement-item {
+    .card-features li {
       display: flex;
       align-items: center;
-      gap: 12px;
-      background: rgba(0,0,0,0.3);
-      border: 1px solid rgba(201,168,76,0.12);
-      border-radius: 8px;
-      padding: 14px 18px;
-      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.83rem;
+      color: rgba(240,230,200,0.7);
+      text-align: left;
     }
 
-    .s-from {
-      font-weight: 700;
-      color: #e74c3c;
-      font-size: 0.95rem;
-    }
-    .s-arrow {
-      color: var(--gold);
-      font-size: 1.1rem;
+    .card-features li::before {
+      content: '◆';
+      font-size: 0.5rem;
+      color: var(--card-accent);
       flex-shrink: 0;
+      opacity: 0.7;
     }
-    .s-to {
+
+    .card-cta {
+      margin-top: 8px;
+      padding: 11px 28px;
+      border-radius: 7px;
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.82rem;
       font-weight: 700;
-      color: #2ecc71;
-      font-size: 0.95rem;
-    }
-    .s-amount {
-      margin-left: auto;
-      font-family: 'Playfair Display', serif;
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: var(--gold-light);
-    }
-    .s-pays { font-size: 0.72rem; color: var(--text-muted); }
-
-    .no-settlements {
-      text-align: center;
-      padding: 24px;
-      color: #2ecc71;
-      font-size: 1rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-    }
-
-    /* ─── Divider ─── */
-    .divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
-      margin: 20px 0;
-    }
-
-    /* ─── Pot info strip ─── */
-    .pot-strip {
-      display: flex;
-      gap: 24px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
-    }
-    .pot-item {
-      text-align: center;
-    }
-    .pot-label {
-      font-size: 0.68rem;
-      letter-spacing: 0.25em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 3px;
-    }
-    .pot-value {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--gold-light);
+      transition: all 0.2s;
     }
 
-    /* ─── Toast ─── */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: rgba(20,60,35,0.97);
-      border: 1px solid var(--gold-dark);
-      border-radius: 8px;
-      padding: 12px 24px;
-      font-size: 0.85rem;
-      color: var(--text);
-      opacity: 0;
-      transition: all 0.3s ease;
-      z-index: 999;
-      white-space: nowrap;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    .poker .card-cta {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      color: #1a0e00;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
+    .poker:hover .card-cta {
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
+      box-shadow: 0 0 20px rgba(201,168,76,0.4);
     }
 
-    /* ─── Responsive ─── */
-    @media (max-width: 600px) {
-      .buyin-row { flex-direction: column; }
-      .add-player-row .field input,
-      .add-player-row .field:first-child input { width: 100%; }
-      .add-player-row { flex-direction: column; }
-      .add-player-row .field { width: 100%; }
+    .spades .card-cta {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: #00111a;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .spades:hover .card-cta {
+      background: linear-gradient(135deg, #81d4fa 0%, var(--blue) 100%);
+      box-shadow: 0 0 20px rgba(79,195,247,0.4);
     }
 
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
+    /* ─── Footer ─── */
+    .footer {
+      position: relative;
+      z-index: 1;
+      padding-bottom: 32px;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: rgba(168,152,112,0.4);
+      text-transform: uppercase;
     }
-    .badge-green { background: rgba(46,204,113,0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.3); }
-    .badge-red   { background: rgba(231,76,60,0.15);  color: #e74c3c;  border: 1px solid rgba(231,76,60,0.3); }
+
+    @media (max-width: 480px) {
+      .games-grid { padding: 40px 16px 60px; gap: 20px; }
+      .game-card { padding: 32px 24px 28px; }
+    }
   </style>
 </head>
 <body>
 
-<!-- ═══ Header ═══ -->
-<header class="header">
-  <div class="suits">♠ <span class="red">♥</span> ♦ <span class="red">♣</span></div>
-  <h1 class="title">Poker Cashout</h1>
-  <p class="subtitle">Settle the Table · Calculate Balances</p>
-</header>
+  <header class="header">
+    <div class="top-suits">♠ <span class="red">♥</span> ♦ <span class="red">♣</span></div>
+    <h1 class="main-title">Game Room</h1>
+    <p class="main-subtitle">Cashout Central · Settle Up Fast</p>
+  </header>
 
-<!-- ═══ App ═══ -->
-<div class="container">
+  <div class="games-grid">
 
-  <!-- Buy-in Config -->
-  <div class="panel">
-    <div class="panel-title">Buy-in Configuration</div>
-    <div class="buyin-row">
-      <div class="field">
-        <label>Chips per Buy-in</label>
-        <input type="number" id="buyInChips" value="200" min="1" placeholder="e.g. 200">
-      </div>
-      <div class="field">
-        <label>Dollar Amount ($)</label>
-        <input type="number" id="buyInDollars" value="5" min="0.01" step="0.01" placeholder="e.g. 5">
-      </div>
-      <div class="chip-eq">
-        <span>→</span>
-        <div class="chip-badge" id="eqBadge">200 chips = $5.00</div>
-        <span style="color:var(--text-muted); font-size:0.8rem;">per buy-in</span>
-      </div>
-    </div>
+    <!-- Poker -->
+    <a class="game-card poker" href="poker.html">
+      <div class="card-icon">🪙</div>
+      <div class="card-name">Poker</div>
+      <div class="card-tagline">Chips · Buy-ins · Balances</div>
+      <ul class="card-features">
+        <li>Configure chip-to-dollar buy-in rate</li>
+        <li>Track final chip counts per player</li>
+        <li>Auto-calculate who owes whom</li>
+        <li>Minimal settlement transactions</li>
+      </ul>
+      <div class="card-cta">Play Poker ♣</div>
+    </a>
+
+    <!-- Spades -->
+    <a class="game-card spades" href="spades.html">
+      <div class="card-icon">♠</div>
+      <div class="card-name">Spades</div>
+      <div class="card-tagline">Teams · Bids · Score Tracking</div>
+      <ul class="card-features">
+        <li>2 teams, 4 players with custom names</li>
+        <li>Full bid & trick tracking per round</li>
+        <li>Nil & Blind Nil bid support</li>
+        <li>Bag penalty counter + dollar cashout</li>
+      </ul>
+      <div class="card-cta">Play Spades ♠</div>
+    </a>
+
   </div>
 
-  <!-- Add Player -->
-  <div class="panel">
-    <div class="panel-title">Players</div>
+  <footer class="footer">♠ &nbsp; ♥ &nbsp; ♦ &nbsp; ♣</footer>
 
-    <div class="add-player-row" style="margin-bottom:20px;">
-      <div class="field">
-        <label>Player Name</label>
-        <input type="text" id="playerName" placeholder="e.g. James Bond" maxlength="24">
-      </div>
-      <div class="field">
-        <label>Final Chips</label>
-        <input type="number" id="playerChips" placeholder="e.g. 450" min="0">
-      </div>
-      <div class="field">
-        <label>Buy-in Count</label>
-        <input type="number" id="playerBuyIns" placeholder="e.g. 2" min="1" value="1">
-      </div>
-      <button class="btn btn-gold" onclick="addPlayer()">+ Add Player</button>
-    </div>
-
-    <div class="table-wrap">
-      <table id="playerTable">
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th>Final Chips</th>
-            <th>Buy-ins</th>
-            <th>Total Invested</th>
-            <th>Chip Value</th>
-            <th>Net</th>
-            <th>Remove</th>
-          </tr>
-        </thead>
-        <tbody id="playerBody">
-          <tr id="emptyRow">
-            <td colspan="7">
-              <div class="empty-state">
-                <span class="big-suit">♠</span>
-                No players yet — add players above to get started.
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Calculate -->
-  <div class="calc-row">
-    <button class="btn btn-gold btn-big" onclick="calculate()">♦ Calculate Settlements ♦</button>
-    <button class="btn btn-outline" onclick="resetAll()">Reset Table</button>
-  </div>
-
-  <!-- Results (hidden until calculated) -->
-  <div class="panel" id="resultsPanel" style="display:none;">
-    <div class="panel-title">Results</div>
-
-    <div class="pot-strip" id="potStrip"></div>
-    <div class="divider"></div>
-
-    <div class="results-grid" id="resultsGrid"></div>
-    <div class="divider"></div>
-
-    <div class="settlements-title">♣ Settlement Instructions ♣</div>
-    <div class="settlement-list" id="settlementList"></div>
-  </div>
-
-</div>
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-
-<script>
-  // ─── State ───
-  let players = [];
-  let nextId = 1;
-
-  // ─── Init ───
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      const focused = document.activeElement;
-      if (['playerName','playerChips','playerBuyIns'].includes(focused.id)) addPlayer();
-    }
-  });
-
-  ['buyInChips','buyInDollars'].forEach(id => {
-    document.getElementById(id).addEventListener('input', () => {
-      updateEqBadge();
-      refreshTable();
-    });
-  });
-
-  function updateEqBadge() {
-    const chips = parseFloat(document.getElementById('buyInChips').value) || 0;
-    const dollars = parseFloat(document.getElementById('buyInDollars').value) || 0;
-    document.getElementById('eqBadge').textContent = `${chips} chips = $${dollars.toFixed(2)}`;
-  }
-
-  // ─── Add Player ───
-  function addPlayer() {
-    const name = document.getElementById('playerName').value.trim();
-    const chips = parseFloat(document.getElementById('playerChips').value);
-    const buyIns = parseInt(document.getElementById('playerBuyIns').value) || 1;
-
-    if (!name) { showToast('Please enter a player name.'); return; }
-    if (isNaN(chips) || chips < 0) { showToast('Please enter a valid chip count.'); return; }
-    if (buyIns < 1) { showToast('Buy-in count must be at least 1.'); return; }
-
-    players.push({ id: nextId++, name, chips, buyIns });
-    document.getElementById('playerName').value = '';
-    document.getElementById('playerChips').value = '';
-    document.getElementById('playerBuyIns').value = '1';
-    document.getElementById('playerName').focus();
-
-    refreshTable();
-    hideResults();
-    showToast(`${name} added to the table.`);
-  }
-
-  // ─── Remove Player ───
-  function removePlayer(id) {
-    players = players.filter(p => p.id !== id);
-    refreshTable();
-    hideResults();
-  }
-
-  // ─── Inline edit ───
-  function updateField(id, field, value) {
-    const p = players.find(p => p.id === id);
-    if (!p) return;
-    const num = parseFloat(value);
-    if (!isNaN(num) && num >= 0) p[field] = num;
-    refreshTable();
-    hideResults();
-  }
-
-  // ─── Refresh table ───
-  function refreshTable() {
-    const tbody = document.getElementById('playerBody');
-    const buyInChips = parseFloat(document.getElementById('buyInChips').value) || 1;
-    const buyInDollars = parseFloat(document.getElementById('buyInDollars').value) || 0;
-
-    if (players.length === 0) {
-      tbody.innerHTML = `<tr id="emptyRow"><td colspan="7"><div class="empty-state"><span class="big-suit">♠</span>No players yet — add players above to get started.</div></td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = players.map(p => {
-      const invested = p.buyIns * buyInDollars;
-      const chipValue = (p.chips / buyInChips) * buyInDollars;
-      const net = chipValue - invested;
-      const netStr = net >= 0 ? `+$${net.toFixed(2)}` : `-$${Math.abs(net).toFixed(2)}`;
-      const netColor = net > 0 ? '#2ecc71' : net < 0 ? '#e74c3c' : 'var(--gold)';
-      const initials = p.name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
-
-      return `<tr>
-        <td><div class="player-name-cell"><div class="avatar">${initials}</div>${escHtml(p.name)}</div></td>
-        <td><input class="inline-input" type="number" value="${p.chips}" min="0" onchange="updateField(${p.id},'chips',this.value)" oninput="updateField(${p.id},'chips',this.value)"></td>
-        <td><input class="inline-input" type="number" value="${p.buyIns}" min="1" style="width:70px;" onchange="updateField(${p.id},'buyIns',this.value)" oninput="updateField(${p.id},'buyIns',this.value)"></td>
-        <td style="color:var(--text-muted)">$${invested.toFixed(2)}</td>
-        <td style="color:var(--text-muted)">$${chipValue.toFixed(2)}</td>
-        <td style="font-weight:700; color:${netColor}">${netStr}</td>
-        <td><button class="btn btn-red" onclick="removePlayer(${p.id})">✕</button></td>
-      </tr>`;
-    }).join('');
-  }
-
-  // ─── Calculate ───
-  function calculate() {
-    if (players.length < 2) {
-      showToast('Add at least 2 players to calculate.');
-      return;
-    }
-
-    const buyInChips = parseFloat(document.getElementById('buyInChips').value) || 1;
-    const buyInDollars = parseFloat(document.getElementById('buyInDollars').value) || 0;
-
-    const computed = players.map(p => {
-      const invested = p.buyIns * buyInDollars;
-      const chipValue = (p.chips / buyInChips) * buyInDollars;
-      const net = Math.round((chipValue - invested) * 100) / 100;
-      return { ...p, invested, chipValue, net };
-    });
-
-    const totalPot = computed.reduce((s, p) => s + p.invested, 0);
-    const totalChipValue = computed.reduce((s, p) => s + p.chipValue, 0);
-    const variance = Math.abs(totalChipValue - totalPot);
-
-    // Pot strip
-    document.getElementById('potStrip').innerHTML = `
-      <div class="pot-item"><div class="pot-label">Total Pot</div><div class="pot-value">$${totalPot.toFixed(2)}</div></div>
-      <div class="pot-item"><div class="pot-label">Players</div><div class="pot-value">${players.length}</div></div>
-      <div class="pot-item"><div class="pot-label">Avg Buy-ins</div><div class="pot-value">${(players.reduce((s,p)=>s+p.buyIns,0)/players.length).toFixed(1)}</div></div>
-      ${variance > 0.02 ? `<div class="pot-item"><div class="pot-label" style="color:#e74c3c">Chip Imbalance</div><div class="pot-value" style="color:#e74c3c; font-size:1rem">±$${variance.toFixed(2)}</div></div>` : ''}
-    `;
-
-    // Player result cards
-    document.getElementById('resultsGrid').innerHTML = computed.map(p => {
-      const cls = p.net > 0.005 ? 'winner' : p.net < -0.005 ? 'loser' : 'even';
-      const balClass = p.net > 0.005 ? 'positive' : p.net < -0.005 ? 'negative' : 'zero';
-      const sign = p.net >= 0 ? '+' : '';
-      const badge = p.net > 0.005
-        ? `<span class="badge badge-green">WINNER</span>`
-        : p.net < -0.005
-        ? `<span class="badge badge-red">OWES</span>`
-        : '';
-      const initials = p.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
-      return `<div class="player-card ${cls}">
-        <div class="pc-name"><div class="avatar" style="width:24px;height:24px;font-size:0.65rem;">${initials}</div>${escHtml(p.name)} ${badge}</div>
-        <div class="pc-balance ${balClass}">${sign}$${Math.abs(p.net).toFixed(2)}</div>
-        <div class="pc-details">
-          Invested: $${p.invested.toFixed(2)} (${p.buyIns}× buy-in)<br>
-          Chips: ${p.chips} → $${p.chipValue.toFixed(2)}
-        </div>
-      </div>`;
-    }).join('');
-
-    // Settlements
-    const transactions = settleDebts(computed);
-    const settleEl = document.getElementById('settlementList');
-    if (transactions.length === 0) {
-      settleEl.innerHTML = `<div class="no-settlements">✓ Everyone is even — no payments needed!</div>`;
-    } else {
-      settleEl.innerHTML = transactions.map(t => `
-        <div class="settlement-item">
-          <div class="s-from">♠ ${escHtml(t.from)}</div>
-          <div class="s-pays">pays</div>
-          <div class="s-arrow">→</div>
-          <div class="s-to">♦ ${escHtml(t.to)}</div>
-          <div class="s-amount">$${t.amount.toFixed(2)}</div>
-        </div>
-      `).join('');
-    }
-
-    document.getElementById('resultsPanel').style.display = 'block';
-    document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  // ─── Settlement algorithm ───
-  function settleDebts(players) {
-    const credits = players
-      .filter(p => p.net > 0.005)
-      .map(p => ({ name: p.name, amount: p.net }))
-      .sort((a, b) => b.amount - a.amount);
-
-    const debts = players
-      .filter(p => p.net < -0.005)
-      .map(p => ({ name: p.name, amount: -p.net }))
-      .sort((a, b) => b.amount - a.amount);
-
-    const transactions = [];
-    let i = 0, j = 0;
-
-    while (i < credits.length && j < debts.length) {
-      const amount = Math.min(credits[i].amount, debts[j].amount);
-      const rounded = Math.round(amount * 100) / 100;
-      if (rounded >= 0.01) {
-        transactions.push({ from: debts[j].name, to: credits[i].name, amount: rounded });
-      }
-      credits[i].amount -= amount;
-      debts[j].amount -= amount;
-      if (credits[i].amount < 0.005) i++;
-      if (debts[j].amount < 0.005) j++;
-    }
-
-    return transactions;
-  }
-
-  function hideResults() {
-    document.getElementById('resultsPanel').style.display = 'none';
-  }
-
-  function resetAll() {
-    if (players.length > 0 && !confirm('Reset the table? All player data will be cleared.')) return;
-    players = [];
-    nextId = 1;
-    refreshTable();
-    hideResults();
-    showToast('Table has been reset.');
-  }
-
-  function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  // ─── Toast ───
-  let toastTimer;
-  function showToast(msg) {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
-  }
-
-  // Init
-  updateEqBadge();
-</script>
 </body>
 </html>
